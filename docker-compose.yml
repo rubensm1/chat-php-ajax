@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  # PHP with Apache service
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db
+    environment:
+      - MYSQL_HOST=db
+      - MYSQL_USER=chat_user
+      - MYSQL_PASSWORD=chat_password
+      - MYSQL_DB=chat_system
+    networks:
+      - chat-network
+
+  # MySQL service
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database.sql:/docker-entrypoint-initdb.d/database.sql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=chat_system
+      - MYSQL_USER=chat_user
+      - MYSQL_PASSWORD=chat_password
+    networks:
+      - chat-network
+
+  # PHPMyAdmin service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=root
+      - PMA_PASSWORD=root_password
+    depends_on:
+      - db
+    networks:
+      - chat-network
+
+networks:
+  chat-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
